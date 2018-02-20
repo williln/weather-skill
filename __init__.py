@@ -1,24 +1,64 @@
-from opsdroid.matchers import match_regex
-
 import aiohttp
 
+from opsdroid.matchers import match_regex
 
-async def get_weather(config):
+from .constants import CITIES
+
+
+async def get_weather(config, city='', zip=''):
+    """
+    Can take the name of a city included in CITIES, or can take a US zip code.
+    """
+    if city:
+        try:
+            zip = CITIES[city.lower()]
+        except KeyError:
+            zip = CITIES['lawrence']
+
+    zip = '{},US'.format(zip)
+
     api_url = "http://api.openweathermap.org/data/2.5/weather?"
     parameters = "zip={}&units={}&appid={}".format(
-        config['zip'], config['units'], config['api-key'])
+        zip, config['units'], config['api-key'])
 
     async with aiohttp.ClientSession() as session:
         response = await session.get(api_url + parameters)
     return await response.json()
 
 
-@match_regex(r"(H?h?ow\'?s the weather\??)")
-async def tell_weather(opsdroid, config, message):
-    weather_data = await get_weather(config)
-    temp = weather_data['main']['temp']
-    humidity = weather_data['main']['humidity']
-    city = weather_data['name']
+@match_regex(r'H?h?ow\'?s the weather in ([a-zA-Z]+(?:[\s-][a-zA-Z]+)*)?\??$')
+async def tell_weather_city(opsdroid, config, message):
+    input_city = message.regex.group(1)
+    weather_data = await get_weather(config, city=input_city)
+    msg = prepare_message(weather_data)
+
+    await message.respond(msg)
+
+
+@match_regex(r'H?h?ow\'?s the weather in (\d{5})?\??$')
+async def tell_weather_zip(opsdroid, config, message):
+    input_zip = message.regex.group(1)
+    weather_data = await get_weather(config, zip=input_zip)
+    msg = prepare_message(weather_data)
+
+    await message.respond(msg)
+
+
+def prepare_message(weather_data):
+    try:
+        temp = weather_data['main']['temp']
+    except KeyError:
+        return "Cannot process your weather!"
+
+    try:
+        humidity = weather_data['main']['humidity']
+    except KeyError:
+        return "Cannot process your weather!"
+
+    try:
+        city = weather_data['name']
+    except KeyError:
+        return "Cannot process your weather!"
 
     if temp < 40:
         msg = "It's freaking cold!"
@@ -27,4 +67,5 @@ async def tell_weather(opsdroid, config, message):
     else:
         msg = "Not too bad!"
 
-    await message.respond("{} It's {} and {}% humidity in {}.".format(msg, int(temp), humidity, city))
+    message = "{} It's {} and {}% humidity in {}.".format(msg, int(temp), humidity, city)
+    return message
