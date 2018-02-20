@@ -13,7 +13,6 @@ In `configuration.yaml`, set up the following:
     skills:
         - name: weather
           repo: "https://github.com/williln/weather-skill"
-          zip: 66044,US     # Zip,Country Code
           units: imperial   # metric is also an option
           api-key: abcdefg  # Your API key, not in quotes 
 
