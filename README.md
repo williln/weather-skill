@@ -19,11 +19,19 @@ In `configuration.yaml`, set up the following:
 
 ## Usage 
 
-Opsdroid will tell you the current weather conditions (temperature and humidity level), and will inject some commentary. 
+Opsdroid will tell you the current weather conditions (temperature and humidity level) for a specific U.S. city or zip code, and will inject some commentary. 
 
-> User: How's the weather? 
+> User: How's the weather in Lawrence? 
 
 > opsdroid: Not too bad! It's currently 45 and 34% humidity in Lawrence.
+
+Or: 
+
+> User: hows the weather in 78757?
+
+> opsdroid: It's freaking cold! It's currently 32 and 86% humidity in Austin. 
+
+
 
 ## Resources 
 
