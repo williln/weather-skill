@@ -5,11 +5,15 @@ from opsdroid.matchers import match_regex
 from .constants import CITIES
 
 
-async def get_weather(config, city='', zip=''):
+async def get_weather(config, city=''):
     """
     Can take the name of a city included in CITIES, or can take a US zip code.
     """
-    if city:
+    # Check if zip code was passed
+    try:
+        zip = int(city)
+    # Not zip code; see if city in CITIES
+    except ValueError:
         try:
             zip = CITIES[city.lower()]
         except KeyError:
@@ -26,19 +30,11 @@ async def get_weather(config, city='', zip=''):
     return await response.json()
 
 
-@match_regex(r'H?h?ow\'?s the weather in ([a-zA-Z]+(?:[\s-][a-zA-Z]+)*)?\??$')
+# Matches a city name or a 5-digit zip code
+@match_regex(r'H?h?ow\'?s the weather in ([a-zA-Z]+(?:[\s-][a-zA-Z]+)*|\d{5})?\??$')
 async def tell_weather_city(opsdroid, config, message):
     input_city = message.regex.group(1)
     weather_data = await get_weather(config, city=input_city)
-    msg = prepare_message(weather_data)
-
-    await message.respond(msg)
-
-
-@match_regex(r'H?h?ow\'?s the weather in (\d{5})?\??$')
-async def tell_weather_zip(opsdroid, config, message):
-    input_zip = message.regex.group(1)
-    weather_data = await get_weather(config, zip=input_zip)
     msg = prepare_message(weather_data)
 
     await message.respond(msg)
